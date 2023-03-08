@@ -1,4 +1,4 @@
-# import all necessary packages
+# import necessary packages
 from bs4 import BeautifulSoup
 import json
 import requests
