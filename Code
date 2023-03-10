@@ -1,10 +1,9 @@
-# import necessary packages
-from bs4 import BeautifulSoup
 import json
-import requests
+import time
 import pandas as pd
 import numpy as np
-import time
+from bs4 import BeautifulSoup
+import requests
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn import metrics
@@ -13,8 +12,8 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import SGDClassifier
-from sklearn.model_selection import GridSearchCV
-import matplotlib.pyplot as plt
+# from sklearn.model_selection import GridSearchCV
+# import matplotlib.pyplot as plt
 
 # preparation works for train and validation data
 page = 1  # set default page number
@@ -36,7 +35,7 @@ while len(company_name) < n_review:
         'https://www.trustpilot.com/review/www.'
         + company
         + '.com?page='
-        + str(page)
+        + str(page), timeout=5
         )
     html_code = resp.text
     soup = BeautifulSoup(html_code,  features='lxml')
@@ -79,10 +78,10 @@ while len(company_name) < n_review:
         else:
             n_component = n_component + 1
 
-    else:
-        page = page + 1
-        n_component = 0
-        print(str(len(company_name))+'/'+str(n_review)+' reviews retrieved')
+
+    page = page + 1
+    n_component = 0
+    print(str(len(company_name))+'/'+str(n_review)+' reviews retrieved')
         # reset the n_components so the while loop won't run forever
         # because otherwise the n_component will never
         # less than len(json_data['@graph'])
@@ -96,6 +95,7 @@ while len(company_name) < n_review:
 
 
 # prepare the lists and convert them to dataframe before output to csv
+#START_CODE
 temp_list1 = list(zip(company_name, date_published))
 temp_list2 = list(zip(rating_value, review_body))
 df1 = pd.DataFrame(temp_list1, columns=['companyName', 'datePublished'])
@@ -126,7 +126,7 @@ while len(company_name) < n_review:
         'https://www.trustpilot.com/review/www.'
         + company
         + '.com?page='
-        + str(page)
+        + str(page), timeout=5
         )
     html_code = resp.text
     soup = BeautifulSoup(html_code,  features='lxml')
@@ -149,10 +149,10 @@ while len(company_name) < n_review:
         else:
             n_component = n_component + 1
 
-    else:
-        page = page + 1
-        n_component = 0
-        print(str(len(company_name))+'/'+str(n_review)+' reviews retrieved')
+
+    page = page + 1
+    n_component = 0
+    print(str(len(company_name))+'/'+str(n_review)+' reviews retrieved')
 
     time.sleep(5)
 
@@ -322,14 +322,13 @@ y_val = val['Sentiment']
 
 n = 1
 clf_series = {'SVC': SVC(C=10, degree=1, kernel='linear'),
-              'MLP': MLPClassifier(activation='relu', solver='lbfgs',
+              'MLP': MLPClassifier(activation='relu', solver='adam',
                                    alpha=0.0001, learning_rate='constant'),
               'SGD': SGDClassifier(alpha=0.0001, loss='modified_huber',
-                                   penalty='elasticnet', eta0=0.1),
+                                   penalty='elasticnet'),
               'Random Forest': RandomForestClassifier(criterion='entropy',
-                                                      n_estimators=700),
-              'Decision Tree': DecisionTreeClassifier(criterion='entropy',
-                                                      splitter='best')
+                                                      n_estimators=500),
+              'Decision Tree': DecisionTreeClassifier(criterion='entropy')
               }
 
 accuracy = []
@@ -364,13 +363,10 @@ while n < len(clf_series):
         # to tune parameters
         '''
         parameters = {
-            'alpha': [0.0001, 0.001, 0.01, 0.1, 1],
-            'loss': ['hinge', 'log', 'modified_huber', 'squared_hinge'],
-            'penalty': ['l2', 'l1', 'elasticnet'],
-            'learning_rate': ['constant', 'optimal', 'invscaling', 'adaptive'],
-            'eta0': [0.1, 0.01, 0.001, 0.0001, 0.00001],
-            'power_t': [0.1, 0.2, 0.3, 0.4, 0.5],
-
+            'activation': ['tanh', 'relu'],
+            'solver': ['lbfgs', 'adam'],
+            'alpha': [0.0001, 0.001, 0.01, 0.1],
+            'learning_rate': ['constant', 'adaptive']
         }
 
         optimal = GridSearchCV(clf, parameters, n_jobs=-1, cv=5)
@@ -405,16 +401,16 @@ while n < len(clf_series):
         print(confusion_matrix)
         print(' ')
 
-        '''
+
         # confusion matrix in graph format
-        confu_matrix = metrics.confusion_matrix(y_val, y_pred,
-                                                labels=clf.classes_)
-        matrix = metrics.ConfusionMatrixDisplay(
-                confusion_matrix=confu_matrix,
-                display_labels=['negative', 'neutral', 'positive'])
-        matrix.plot()
-        plt.show()
-        '''
+        # confu_matrix = metrics.confusion_matrix(y_val, y_pred,
+        #                                        labels=clf.classes_)
+        # matrix = metrics.ConfusionMatrixDisplay(
+        #          confusion_matrix=confu_matrix,
+        #          display_labels=['negative', 'neutral', 'positive'])
+        # matrix.plot()
+        # plt.show()
+
 
         n = n + 1
 
